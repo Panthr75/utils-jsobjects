@@ -68,14 +68,23 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		
 		for (int index = 0, length = items.length; index < length; index++)
 		{
-			// NOTE: Implement IsConcatSpreadable
-			A.push(items[index]);
+			Object E = items[index];
+			if (isConcatSpreadable(E))
+			{
+				ArrayLike Earr = (ArrayLike)E;
+				for (int k = 0, len = Earr.length(); k < len; k++)
+				{
+					A.push(Earr.get(k));
+				}
+			}
+			else
+				A.push(items[index]);
 		}
 		
 		return A;
 	}
 	
-	boolean isConcatSpreadable(Object o)
+	static boolean isConcatSpreadable(Object o)
 	{
 		if (o instanceof IsConcatSpreadable)
 		{
@@ -766,6 +775,8 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		}
 		return false;
 	}
+	
+	//TODO: refactor .sort() SO ITS WAY FASTER LIKE JS RUNS 10X FASTER THAN IT
 	
 	public void sort()
 	{
