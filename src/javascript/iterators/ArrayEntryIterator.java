@@ -1,22 +1,23 @@
-package javascript;
+package javascript.iterators;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import javascript.ArrayEntry;
 import javascript.interfaces.ArrayLike;
 
 /**
- * An iterator for iterating through the values of an array.
+ * An iterator for iterating through the entries of an array
  * @author Josh
  * @version 8th October, 2020
  */
-public class ArrayValueIterator implements Iterator<Object>
+public class ArrayEntryIterator implements Iterator<ArrayEntry>
 {
 	private final ArrayLike array;
 	private int index;
 	private final int length;
 	
-	public ArrayValueIterator(ArrayLike array)
+	public ArrayEntryIterator(ArrayLike array)
 	{
 		this.length = array.length();
 		this.array = array.slice(0, this.length);
@@ -30,13 +31,13 @@ public class ArrayValueIterator implements Iterator<Object>
 	}
 
 	@Override
-	public Object next() 
+	public ArrayEntry next() 
 	{
 		if (this.hasNext())
 		{
-			Object result = this.array.get(this.index);
+			ArrayEntry entry = new ArrayEntry(this.index, this.array.get(index));
 			this.index++;
-			return result;
+			return entry;
 		}
 		else
 		{

@@ -1,4 +1,4 @@
-package javascript;
+package javascript.iterators;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -6,18 +6,20 @@ import java.util.NoSuchElementException;
 import javascript.interfaces.ArrayLike;
 
 /**
- * An iterator for iterating through an array's keys
+ * An iterator for iterating through the values of an array.
  * @author Josh
  * @version 8th October, 2020
  */
-public class ArrayKeyIterator implements Iterator<Integer>
+public class ArrayValueIterator implements Iterator<Object>
 {
+	private final ArrayLike array;
 	private int index;
 	private final int length;
 	
-	public ArrayKeyIterator(ArrayLike array)
+	public ArrayValueIterator(ArrayLike array)
 	{
 		this.length = array.length();
+		this.array = array.slice(0, this.length);
 		this.index = 0;
 	}
 
@@ -28,11 +30,11 @@ public class ArrayKeyIterator implements Iterator<Integer>
 	}
 
 	@Override
-	public Integer next() 
+	public Object next() 
 	{
 		if (this.hasNext())
 		{
-			int result = this.index;
+			Object result = this.array.get(this.index);
 			this.index++;
 			return result;
 		}

@@ -1,4 +1,4 @@
-package javascript;
+package javascript.iterators;
 
 import javascript.interfaces.*;
 

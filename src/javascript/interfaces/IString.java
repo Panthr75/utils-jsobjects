@@ -3,6 +3,7 @@ package javascript.interfaces;
 import java.util.Iterator;
 
 import javascript.*;
+import javascript.iterators.StringIterator;
 
 /**
  * The base interface for something implementing an ECMAScript 262

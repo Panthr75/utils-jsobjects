@@ -6,6 +6,9 @@ import java.util.function.*;
 
 import javascript.*;
 import javascript.annotations.*;
+import javascript.iterators.ArrayEntryIterator;
+import javascript.iterators.ArrayKeyIterator;
+import javascript.iterators.ArrayValueIterator;
 
 public interface IArray<A extends IArray<A>> extends ArrayLike, Iterable<Object>, IReadonlyArray<A>
 {
