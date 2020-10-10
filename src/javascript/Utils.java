@@ -28,6 +28,11 @@ class Utils
 		else if (b == null) return false;
 		else if (a instanceof JSUndefined) return b instanceof JSUndefined;
 		else if (a instanceof String) return b instanceof String && ((String)a).contentEquals((String)b);
+		else if (a instanceof JSString)
+		{
+			JSString aString = (JSString)a;
+			if (b instanceof JSString) return aString.contentEquals((JSString)b);
+		}
 		
 		Class<?> aClass = a.getClass();
 		if (aClass == boolean.class || aClass == Boolean.class) return ((Boolean)a).equals(b);

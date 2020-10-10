@@ -10,6 +10,28 @@ public class JSObject
 	 */
 	boolean frozen;
 	
+	/**
+	 * The default way of turning an object to a string.
+	 * <br/>
+	 * Returns <code>[Object ClassName]</code>.
+	 */
+	@Override
+	public String toString()
+	{
+		Class<?> clazz = this.getClass();
+		String name = clazz == JSObject.class ? "object" : clazz.getName();
+		return "[Object " + name + "]";
+	}
+	
+	/**
+	 * Gets the raw primitive value this object
+	 * @return The raw primitive value of this object
+	 */
+	public Object valueOf()
+	{
+		return this;
+	}
+	
 	public static Object getPrototypeOf(JSObject obj)
 	{
 		if (obj == null) throw new IllegalArgumentException("'null' has no prototype");

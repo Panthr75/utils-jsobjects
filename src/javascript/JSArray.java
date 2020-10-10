@@ -20,6 +20,19 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		return this._values.length;
 	}
 	
+	public void setLength(int newLength)
+	{
+		if (JSObject.isFrozen(this)) return;
+		int oldLength = this.length();
+		
+		this._values = Arrays.copyOf(this._values, newLength);
+		
+		for (int i = oldLength; i < newLength; i++)
+		{
+			this._values[i] = Global.undefined;
+		}
+	}
+	
 	/**
 	 * Instantiates a new Array with a length of 0
 	 */
@@ -86,10 +99,7 @@ public class JSArray extends JSObject implements IArray<JSArray>
 	
 	static boolean isConcatSpreadable(Object o)
 	{
-		if (o instanceof IsConcatSpreadable)
-		{
-			return ((IsConcatSpreadable) o).isConcatSpreadable();
-		}
+		if (o instanceof ConcatArray) return true;
 		return JSArray.isArray(o);
 	}
 	
@@ -714,10 +724,11 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		
 		JSArray A = new JSArray(count);
 		
-		for (; k < fin; k++)
+		for (int j = 0; j < count; j++)
 		{
 			Object kValue = this.get(k);
-			A.set(k, kValue);
+			A.set(j, kValue);
+			k++;
 		}
 		
 		return A;
@@ -733,10 +744,11 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		
 		JSArray A = new JSArray(count);
 		
-		for (; k < fin; k++)
+		for (int j = 0; j < count; j++)
 		{
 			Object kValue = this.get(k);
-			A.set(k, kValue);
+			A.set(j, kValue);
+			k++;
 		}
 		
 		return A;
@@ -752,10 +764,11 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		
 		JSArray A = new JSArray(count);
 		
-		for (; k < fin; k++)
+		for (int j = 0; j < count; j++)
 		{
 			Object kValue = this.get(k);
-			A.set(k, kValue);
+			A.set(j, kValue);
+			k++;
 		}
 		
 		return A;
@@ -778,14 +791,14 @@ public class JSArray extends JSObject implements IArray<JSArray>
 	
 	//TODO: refactor .sort() SO ITS WAY FASTER LIKE JS RUNS 10X FASTER THAN IT
 	
-	public void sort()
+	public JSArray sort()
 	{
-		sort(null);
+		return sort(null);
 	}
 	
-	public void sort(ToIntFunction<CompareInfo> compareFn)
+	public JSArray sort(ToIntFunction<CompareInfo> compareFn)
 	{
-		if (JSObject.isFrozen(this)) return;
+		if (JSObject.isFrozen(this)) return this;
 		
 		int len = this.length();
 		
@@ -808,6 +821,8 @@ public class JSArray extends JSObject implements IArray<JSArray>
 				else prev = current;
 			}
 		}
+		
+		return this;
 	}
 	
 	private int sortCompare(Object x, Object y, ToIntFunction<CompareInfo> compareFn)
@@ -981,7 +996,7 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		return A;
 	}
 	
-	public JSArray splice(int start, int deleteCount, Object[] items)
+	public JSArray splice(int start, int deleteCount, Object ...items)
 	{
 		int len = this.length();
 
@@ -1053,6 +1068,8 @@ public class JSArray extends JSObject implements IArray<JSArray>
 				this.set(k, items[i]);
 				k++;
 			}
+			
+			this.setLength(len - actualDeleteCount + itemCount);
 		}
 		
 		return A;
@@ -1084,17 +1101,15 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		int argCount = items.length;
 		if (argCount > 0)
 		{
-			Object[] newValues = new Object[len + argCount];
-			int k = 0;
-			for (; k < argCount; k++)
-			{
-				newValues[k] = items[k];
-			}
+			Object[] newValues = Arrays.copyOf(items, len + argCount);
+			int k = argCount;
 			
 			for (int j = 0; j < len; j++)
 			{
 				newValues[k + j] = this._values[j];
 			}
+			
+			this._values = newValues;
 		}
 		
 		return len + argCount;
