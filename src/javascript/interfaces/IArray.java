@@ -10,6 +10,13 @@ import javascript.annotations.*;
 public interface IArray<A extends IArray<A>> extends ArrayLike, Iterable<Object>, IReadonlyArray<A>
 {
 	/**
+	 * Sets the length of this array.
+	 * @param newLength the new length of this array.
+	 */
+	@Mutator
+	void setLength(int newLength);
+	
+	/**
 	 * Copies an item at a specific index within this array to the given range.
 	 * <br>
 	 * If no arguments are passed, this method fills every item in this array with the first element.

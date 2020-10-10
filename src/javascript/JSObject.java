@@ -19,7 +19,7 @@ public class JSObject
 	public String toString()
 	{
 		Class<?> clazz = this.getClass();
-		String name = clazz == JSObject.class ? "object" : clazz.getName();
+		String name = clazz == JSObject.class ? "object" : clazz.getSimpleName();
 		return "[Object " + name + "]";
 	}
 	

@@ -3,6 +3,7 @@ package javascript.tests;
 import java.util.function.Consumer;
 
 import javascript.*;
+import javascript.exceptions.UpdatePropertyException;
 
 class JSArrayTests extends Tester
 {
@@ -15,12 +16,15 @@ class JSArrayTests extends Tester
 		
 		testArray = JSObject.freeze(testArray);
 		
-		testArray.push("more data");
+		try { testArray.push("more data"); }
+		catch (UpdatePropertyException e) {}
 		
 		this.assertEquals(3, testArray.length());
-		this.assertEquals(false, testArray.delete(0));
+		try { this.assertEquals(false, testArray.delete(0)); }
+		catch (UpdatePropertyException e) {}
 		
-		testArray.set(1, "I wanna eat the pi");
+		try { testArray.set(1, "I wanna eat the pi"); }
+		catch (UpdatePropertyException e) {}
 		
 		this.assertEquals(Math.PI, testArray.get(1), 0.0001);
 	}

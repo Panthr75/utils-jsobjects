@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.function.*;
 
 import javascript.interfaces.*;
+import javascript.exceptions.*;
 
 /**
  * An <a href="https://tc39.es/ecma262/#sec-array-objects">ECMA-262 Array</a> implementation
@@ -106,8 +107,6 @@ public class JSArray extends JSObject implements IArray<JSArray>
 	
 	public JSArray copyWithin()
 	{
-		if (JSObject.isFrozen(this)) return this;
-		
 		int len = this.length();
 		
 		int to = 0;
@@ -140,8 +139,6 @@ public class JSArray extends JSObject implements IArray<JSArray>
 	
 	public JSArray copyWithin(int target)
 	{
-		if (JSObject.isFrozen(this)) return this;
-		
 		int len = this.length();
 		
 		int to = target < 0 ? Math.max(len + target, 0) : Math.min(target, len);
@@ -182,8 +179,6 @@ public class JSArray extends JSObject implements IArray<JSArray>
 	
 	public JSArray copyWithin(int target, int start)
 	{
-		if (JSObject.isFrozen(this)) return this;
-		
 		int len = this.length();
 		
 		int to = target < 0 ? Math.max(len + target, 0) : Math.min(target, len);
@@ -224,8 +219,6 @@ public class JSArray extends JSObject implements IArray<JSArray>
 	
 	public JSArray copyWithin(int target, int start, int end)
 	{
-		if (JSObject.isFrozen(this)) return this;
-		
 		int len = this.length();
 		
 		int to = target < 0 ? Math.max(len + target, 0) : Math.min(target, len);
@@ -278,8 +271,6 @@ public class JSArray extends JSObject implements IArray<JSArray>
 	
 	public JSArray fill(Object value)
 	{
-		if (JSObject.isFrozen(this)) return this;
-		
 		int len = this.length();
 		int k = 0;
 		int fin = len;
@@ -294,8 +285,6 @@ public class JSArray extends JSObject implements IArray<JSArray>
 	
 	public JSArray fill(Object value, int start)
 	{
-		if (JSObject.isFrozen(this)) return this;
-		
 		int len = this.length();
 		int k = start < 0 ? Math.max(len + start, 0) : Math.min(start, len);
 		int fin = len;
@@ -310,8 +299,6 @@ public class JSArray extends JSObject implements IArray<JSArray>
 	
 	public JSArray fill(Object value, int start, int end)
 	{
-		if (JSObject.isFrozen(this)) return this;
-		
 		int len = this.length();
 		int k = start < 0 ? Math.max(len + start, 0) : Math.min(start, len);
 		int fin = end < 0 ? Math.max(len + end, 0) : Math.min(end, len);
@@ -563,7 +550,7 @@ public class JSArray extends JSObject implements IArray<JSArray>
 			int index = len - 1;
 			Object element = this.get(index);
 			
-			if (!JSObject.isFrozen(this)) this.delete(index);
+			this.delete(index);
 			return element;
 		}
 	}
@@ -576,11 +563,9 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		int argCount = items.length;
 		if (argCount > 0)
 		{
-			this._values = Arrays.copyOf(this._values, len + argCount);
-			
 			for (int index = 0; index < argCount; index++)
 			{
-				this.set(len, items[index]);
+				this._add(len, items[index]);
 				len++;
 			}
 		}
@@ -668,8 +653,6 @@ public class JSArray extends JSObject implements IArray<JSArray>
 	
 	public JSArray reverse()
 	{
-		if (JSObject.isFrozen(this)) return this;
-		
 		int len = this.length();
 		
 		int middle = len / 2;
@@ -693,23 +676,18 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		int len = this.length();
 		
 		if (len == 0)
-		{
 			return Global.undefined;
-		}
 		else
 		{
 			Object first = this.get(0);
 			
-			if (!JSObject.isFrozen(this))
+			for (int k = 1; k < len; k++)
 			{
-				for (int k = 1; k < len; k++)
-				{
-					Object val = this.get(k);
-					this.set(k - 1, val);
-				}
-				
-				this.delete(len - 1);
+				Object val = this.get(k);
+				this.set(k - 1, val);
 			}
+			
+			this.delete(len - 1);
 			return first;
 		}
 	}
@@ -798,8 +776,6 @@ public class JSArray extends JSObject implements IArray<JSArray>
 	
 	public JSArray sort(ToIntFunction<CompareInfo> compareFn)
 	{
-		if (JSObject.isFrozen(this)) return this;
-		
 		int len = this.length();
 		
 		// I need to implement IntroSort, but for now this will do
@@ -872,28 +848,25 @@ public class JSArray extends JSObject implements IArray<JSArray>
 			}
 		}
 		
-		if (!JSObject.isFrozen(this))
+		k = actualStart;
+		for (; k < len - actualDeleteCount; k++)
 		{
-			k = actualStart;
-			for (; k < len - actualDeleteCount; k++)
+			int from = k + actualDeleteCount;
+			int to = k;
+			if (from >= 0 && k < len)
 			{
-				int from = k + actualDeleteCount;
-				int to = k;
-				if (from >= 0 && k < len)
-				{
-					Object fromValue = this.get(from);
-					this.set(to, fromValue);
-				}
-				else
-				{
-					this.delete(to);
-				}
+				Object fromValue = this.get(from);
+				this.set(to, fromValue);
 			}
-			k = len;
-			for (; k > len - actualDeleteCount; k--)
+			else
 			{
-				this.delete(k - 1);
+				this.delete(to);
 			}
+		}
+		k = len;
+		for (; k > len - actualDeleteCount; k--)
+		{
+			this.delete(k - 1);
 		}
 		
 		return A;
@@ -921,28 +894,25 @@ public class JSArray extends JSObject implements IArray<JSArray>
 			}
 		}
 		
-		if (!JSObject.isFrozen(this))
+		k = actualStart;
+		for (; k < len - actualDeleteCount; k++)
 		{
-			k = actualStart;
-			for (; k < len - actualDeleteCount; k++)
+			int from = k + actualDeleteCount;
+			int to = k;
+			if (from >= 0 && k < len)
 			{
-				int from = k + actualDeleteCount;
-				int to = k;
-				if (from >= 0 && k < len)
-				{
-					Object fromValue = this.get(from);
-					this.set(to, fromValue);
-				}
-				else
-				{
-					this.delete(to);
-				}
+				Object fromValue = this.get(from);
+				this.set(to, fromValue);
 			}
-			k = len;
-			for (; k > len - actualDeleteCount; k--)
+			else
 			{
-				this.delete(k - 1);
+				this.delete(to);
 			}
+		}
+		k = len;
+		for (; k > len - actualDeleteCount; k--)
+		{
+			this.delete(k - 1);
 		}
 		
 		return A;
@@ -969,28 +939,25 @@ public class JSArray extends JSObject implements IArray<JSArray>
 			}
 		}
 		
-		if (!JSObject.isFrozen(this))
+		k = actualStart;
+		for (; k < len - actualDeleteCount; k++)
 		{
-			k = actualStart;
-			for (; k < len - actualDeleteCount; k++)
+			int from = k + actualDeleteCount;
+			int to = k;
+			if (from >= 0 && k < len)
 			{
-				int from = k + actualDeleteCount;
-				int to = k;
-				if (from >= 0 && k < len)
-				{
-					Object fromValue = this.get(from);
-					this.set(to, fromValue);
-				}
-				else
-				{
-					this.delete(to);
-				}
+				Object fromValue = this.get(from);
+				this.set(to, fromValue);
 			}
-			k = len;
-			for (; k > len - actualDeleteCount; k--)
+			else
 			{
-				this.delete(k - 1);
+				this.delete(to);
 			}
+		}
+		k = len;
+		for (; k > len - actualDeleteCount; k--)
+		{
+			this.delete(k - 1);
 		}
 		
 		return A;
@@ -1017,60 +984,57 @@ public class JSArray extends JSObject implements IArray<JSArray>
 			}
 		}
 		
-		if (!JSObject.isFrozen(this))
+		int itemCount = items.length;
+		if (itemCount < actualDeleteCount)
 		{
-			int itemCount = items.length;
-			if (itemCount < actualDeleteCount)
-			{
-				k = actualStart;
-				for (; k < len - actualDeleteCount; k++)
-				{
-					int from = k + actualDeleteCount;
-					int to = k + itemCount;
-					if (from >= 0 && k < len)
-					{
-						Object fromValue = this.get(from);
-						this.set(to, fromValue);
-					}
-					else
-					{
-						this.delete(to);
-					}
-				}
-				k = len;
-				for (; k > len - actualDeleteCount + itemCount; k--)
-				{
-					this.delete(k - 1);
-				}
-			}
-			else if (itemCount > actualDeleteCount)
-			{
-				k = len - actualDeleteCount;
-				for (; k > actualStart; k--)
-				{
-					int from = k + actualDeleteCount - 1;
-					int to = k + itemCount - 1;
-					if (from >= 0 && k < len)
-					{
-						Object fromValue = this.get(from);
-						this.set(to, fromValue);
-					}
-					else
-					{
-						this.delete(to);
-					}
-				}
-			}
-			
 			k = actualStart;
-			for (int i = 0; i < itemCount; i++)
+			for (; k < len - actualDeleteCount; k++)
 			{
-				this.set(k, items[i]);
-				k++;
+				int from = k + actualDeleteCount;
+				int to = k + itemCount;
+				if (from >= 0 && k < len)
+				{
+					Object fromValue = this.get(from);
+					this.set(to, fromValue);
+				}
+				else
+				{
+					this.delete(to);
+				}
 			}
-			
-			this.setLength(len - actualDeleteCount + itemCount);
+			k = len;
+			for (; k > len - actualDeleteCount + itemCount; k--)
+			{
+				this.delete(k - 1);
+			}
 		}
+		else if (itemCount > actualDeleteCount)
+		{
+			k = len - actualDeleteCount;
+			for (; k > actualStart; k--)
+			{
+				int from = k + actualDeleteCount - 1;
+				int to = k + itemCount - 1;
+				if (from >= 0 && k < len)
+				{
+					Object fromValue = this.get(from);
+					this.set(to, fromValue);
+				}
+				else
+				{
+					this.delete(to);
+				}
+			}
+		}
+		
+		k = actualStart;
+		for (int i = 0; i < itemCount; i++)
+		{
+			this.set(k, items[i]);
+			k++;
+		}
+		
+		this.setLength(len - actualDeleteCount + itemCount);
 		
 		return A;
 	}
@@ -1096,7 +1060,6 @@ public class JSArray extends JSObject implements IArray<JSArray>
 	public int unshift(Object ...items)
 	{
 		int len = this.length();
-		if (JSObject.isFrozen(this)) return len;
 		
 		int argCount = items.length;
 		if (argCount > 0)
@@ -1109,12 +1072,55 @@ public class JSArray extends JSObject implements IArray<JSArray>
 				newValues[k + j] = this._values[j];
 			}
 			
-			this._values = newValues;
+			this._update(newValues);
 		}
 		
 		return len + argCount;
 	}
 	
+	private void _update(Object[] values)
+	{
+		int valLength = values.length;
+		int len = this.length();
+		
+		while (valLength < len)
+		{
+			this.delete(valLength);
+			len--;
+		}
+		
+		if (valLength > len)
+		{
+			if (JSObject.isFrozen(this))
+				throw new UpdatePropertyException(String.valueOf(valLength - 1), this, 
+						UpdatePropertyException.UpdateType.ADD);
+			
+			int k = 0;
+			while (valLength > len)
+			{
+				this._add(k, values[k]);
+				len++;
+				k++;
+			}
+		}
+	}
+	
+	private void _add(int index, Object value)
+	{
+		if (JSObject.isFrozen(this)) 
+			throw new UpdatePropertyException(String.valueOf(index), this, UpdatePropertyException.UpdateType.ADD);
+		
+		int len = this.length();
+		
+		this.setLength(len + 1);
+		
+		for (int k = len - 1; k >= index; k--)
+		{
+			this._set(k + 1, this._values[k]);
+		}
+
+		this._set(index, value);
+	}
 	
 	public Object get(int index)
 	{
@@ -1122,32 +1128,36 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		return this._values[index];
 	}
 	
+	private void _set(int index, Object value)
+	{
+		if (JSObject.isFrozen(this))
+			throw new UpdatePropertyException(String.valueOf(index), this, 
+					UpdatePropertyException.UpdateType.SET);
+		
+		this._values[index] = value;
+	}
+	
 	public void set(int index, Object value)
 	{
-		if (JSObject.isFrozen(this)) return;
-		
 		if (index >= 0)
 		{
 			int len = this.length();
 			if (index >= len)
-			{
-				this._values = Arrays.copyOf(this._values, index + 1);
-				for (int k = len; k < index; k++)
-				{
-					this._values[k] = Global.undefined;
-				}
-				this._values[index] = value;
-			}
+				this._add(index, value);
 			else
-			{
-				this._values[index] = value;
-			}
+				this._set(index, value);
 		}
 	}
 	
 	public boolean delete(int index)
 	{
-		if (JSObject.isFrozen(this) || index < 0) return false;
+		if (JSObject.isFrozen(this))
+		{
+			throw new UpdatePropertyException(String.valueOf(index), this, 
+					UpdatePropertyException.UpdateType.DELETE);
+		}
+			
+		if (index < 0) return false;
 		
 		int len = this.length();
 		
@@ -1188,6 +1198,15 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		return A;
 	}
 	
+	/**
+	 * Creates an Array from the given item array, using the <code>mapFn</code>
+	 * to map each item to a new one
+	 * @param <U> The original type
+	 * @param <T> The type to map to
+	 * @param items The items
+	 * @param mapFn The function to map an item <code>U</code> to item <code>T</code>.
+	 * @return An Array comprising of <code>items</code> mapped via <code>mapFn</code>.
+	 */
 	public static <U, T> JSArray from(U[] items, Function<U, T> mapFn)
 	{
 		if (mapFn == null) throw new IllegalArgumentException("'mapFn' may not be 'null'");
@@ -1203,6 +1222,12 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		return A;
 	}
 	
+	/**
+	 * Creates an Array from the given iterator
+	 * @param <T> The type this iterator holds
+	 * @param iterator The iterator
+	 * @return An Array comprising of the items in <code>iterator</code>
+	 */
 	public static <T> JSArray from(Iterator<T> iterator)
 	{
 		JSArray A = new JSArray();
@@ -1219,6 +1244,15 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		return A;
 	}
 	
+	/**
+	 * Creates an Array from the given iterator, using the <code>mapFn</code>
+	 * to map each item in the iterator to a new one.
+	 * @param <U> The original type
+	 * @param <T> The type to map to
+	 * @param iterator The iterator
+	 * @param mapFn The function to map an item <code>U</code> to item <code>T</code>.
+	 * @return An Array comprising of the items in <code>iterator</code> mapped via <code>mapFn</code>.
+	 */
 	public static <U, T> JSArray from(Iterator<U> iterator, Function<U, T> mapFn)
 	{
 		if (mapFn == null) throw new IllegalArgumentException("'mapFn' may not be 'null'");
@@ -1237,16 +1271,39 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		return A;
 	}
 	
+	/**
+	 * Creates an Array from the given iterable object.
+	 * <br/>
+	 * <b>This is short for writing <code>JSArray.from(iterable.iterator())</code>.</b>
+	 * @param <T> The type this iterable holds
+	 * @param iterable The iterable object
+	 * @return An Array comprising of the items in <code>iterable</code>
+	 */
 	public static <T> JSArray from(Iterable<T> iterable)
 	{
 		return JSArray.from(iterable.iterator());
 	}
 	
+	/**
+	 * Creates an Array from the given iterable object.
+	 * <br/>
+	 * <b>This is short for writing <code>JSArray.from(iterable.iterator(), mapFn)</code>.</b>
+	 * @param <U> The original type
+	 * @param <T> The type to map to
+	 * @param iterable The iterable object
+	 * @param mapFn The function to map an item <code>U</code> to item <code>T</code>.
+	 * @return An Array comprising of the items in <code>iterable</code> mapped via <code>mapFn</code>.
+	 */
 	public static <U, T> JSArray from(Iterable<U> iterable, Function<U, T> mapFn) 
 	{
 		return JSArray.from(iterable.iterator(), mapFn);
 	}
 	
+	/**
+	 * Creates an Array from the given ArrayLike object
+	 * @param array The array-like object
+	 * @return An Array from the ArrayLike object
+	 */
 	public static JSArray from(ArrayLike array)
 	{
 		int len = array.length();
@@ -1261,6 +1318,14 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		return A;
 	}
 	
+	/**
+	 * Creates an Array from the given ArrayLike object, using <code>mapFn</code>
+	 * to map each item in the array-like object to a new one.
+	 * @param <T> The type to map to
+	 * @param array The array-like object
+	 * @param mapFn The function to map an item to an item of type <code>T</code>.
+	 * @return An Array from the ArrayLike object mapped via <code>mapFn</code>.
+	 */
 	public static <T> JSArray from(ArrayLike array, Function<Object, T> mapFn)
 	{
 		if (mapFn == null) throw new IllegalArgumentException("'mapFn' may not be 'null'");
@@ -1273,6 +1338,25 @@ public class JSArray extends JSObject implements IArray<JSArray>
 		{
 			Object kValue = array.get(k);
 			A.set(k, mapFn.apply(kValue));
+		}
+		
+		return A;
+	}
+	
+	/**
+	 * Creates an array comprising of <code>items</code>.
+	 * @param items The items to put in the array
+	 * @return An array comprising of <code>items</code>.
+	 */
+	public static JSArray of(Object ...items)
+	{
+		int len = items.length;
+		JSArray A = new JSArray(len);
+		
+		for (int k = 0; k < len; k++)
+		{
+			Object kValue = items[k];
+			A.set(k, kValue);
 		}
 		
 		return A;
